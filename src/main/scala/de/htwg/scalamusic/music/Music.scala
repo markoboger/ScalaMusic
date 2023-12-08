@@ -3,62 +3,55 @@ package de.htwg.scalamusic.music
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-trait Music {
-  def play(instrument: Instrument, volume: Int = Context.volume): Unit
-  def *(repetitions: Int): Music
-  def *(pattern: Pattern): Music
-  def toTickList: List[Option[Music]]
-}
+trait Music:
+    def play(instrument: Instrument, volume: Int = Context.volume): Unit
+    def *(repetitions: Int): Music
+    def *(pattern: Pattern): Music
+    def toTickList: List[Option[Music]]
 
-trait MusicElem extends Music {
-  val ticks: Int
-  def duration = ticks * Context.tickduration
-}
+trait MusicElem extends Music:
+    val ticks: Int
+    def duration = ticks * Context.tickduration
 
-trait MusicSeq(musicSeq: Seq[Music] = Seq.empty)
-    extends Music
-    with Iterable[Music] {
-  private val generator = scala.util.Random
-  var repeat = 1
-  var pattern = Pattern(1)
-  // override def foreach[U](f: Music => U) = f(this)
-  def play(instrument: Instrument = Piano, volume: Int) = for (
-    i <- 1 to repeat; part <- pattern
-  ) {
-    musicSeq.foreach(_.play(instrument, volume = volume * part))
-  }
-  def *(_pattern: Pattern): MusicSeq = { pattern = _pattern; this }
-  def *(rep: Int): MusicSeq = { repeat = repeat * rep; this }
-  def choose = musicSeq.toIndexedSeq(generator.nextInt(size))
-  def toTickList: List[Option[Music]] = (1 to repeat).toList.flatMap(inner =>
-    musicSeq.toList.flatMap(music => music.toTickList)
-  )
-  def iterator: Iterator[Music] = musicSeq.iterator
-}
+trait MusicSeq(musicSeq: Seq[Music] = Seq.empty) extends Music with Iterable[Music]:
+    private val generator = scala.util.Random
+    var repeat = 1
+    var pattern = Pattern(1)
+    def play(instrument: Instrument = Piano, volume: Int) = for (i <- 1 to repeat; part <- pattern) {
+        musicSeq.foreach(_.play(instrument, volume = volume * part))
+    }
+    def *(_pattern: Pattern): MusicSeq = { pattern = _pattern; this }
+    def *(rep: Int): MusicSeq = { repeat = repeat * rep; this }
+    def choose = musicSeq.toIndexedSeq(generator.nextInt(size))
+    def toTickList: List[Option[Music]] =
+        (1 to repeat).toList.flatMap(inner => musicSeq.toList.flatMap(music => music.toTickList))
+    def iterator: Iterator[Music] = musicSeq.iterator
 
-case class Tune(val musicSeq: Music*) extends MusicSeq {
-  override def toString: String =
-    musicSeq.toString.replace("WrappedArray(", "(").replace(")", ")")
-}
-case class Line(val musicSeq: Music*) extends MusicSeq {
-  override def toString: String =
-    musicSeq.toString.replace("WrappedArray(", "[").replace(")", "]")
-}
-case class Track(val musicSeq: Music*) extends MusicSeq {
-  override def toString: String =
-    musicSeq.toString.replace("WrappedArray(", "{").replace(")", "}")
-}
+case class Pattern(pattern: Int*) extends Iterable[Int]:
+    def iterator: Iterator[Int] = pattern.iterator
+
+case class Tune(val musicSeq: Music*) extends MusicSeq:
+    override def toString: String =
+        musicSeq.toString.replace("WrappedArray(", "(").replace(")", ")")
+
+case class Line(val musicSeq: Music*) extends MusicSeq:
+    override def toString: String =
+        musicSeq.toString.replace("WrappedArray(", "[").replace(")", "]")
+
+case class Track(val musicSeq: Music*) extends MusicSeq:
+    override def toString: String =
+        musicSeq.toString.replace("WrappedArray(", "{").replace(")", "}")
 
 def play(musicSeq: Music*): Unit = musicSeq.map(music =>
-  music match {
-    case elem: MusicElem => Piano.play(elem, volume = Context.volume)
-    case seq: MusicSeq   => seq.map(elem => Piano.play(elem, Context.volume))
-  }
+    music match {
+        case elem: MusicElem => Piano.play(elem, volume = Context.volume)
+        case seq: MusicSeq   => seq.map(elem => Piano.play(elem, Context.volume))
+    }
 )
 def choose(music: MusicSeq): Music = {
-  val generator = scala.util.Random
-  val index = generator.nextInt(music.size)
-  music.toIndexedSeq(index)
+    val generator = scala.util.Random
+    val index = generator.nextInt(music.size)
+    music.toIndexedSeq(index)
 }
 def loop[A](n: Int)(f: => A): Unit = { if (n > 0) { f; loop(n - 1)(f) } }
 

@@ -29,3 +29,4 @@ project/.sbtserver
 .scala_dependencies
 .worksheet
 metals.*
+.metals/
