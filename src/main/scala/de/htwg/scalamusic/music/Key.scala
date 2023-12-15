@@ -1,5 +1,6 @@
 package de.htwg.scalamusic.music
 
+import de.htwg.scalamusic.music.Context.volume
 import scala.language.postfixOps
 
 case class Key(

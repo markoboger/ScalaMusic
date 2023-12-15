@@ -9,7 +9,7 @@ object Context:
     var octave = 4
     var bpm = 80
     var fraction: Double = 0.25
-    var volume = 75
+    val volume = 75
     var hardIncrease = 25
     var softDecrease = 25
     require(volume + hardIncrease <= 100)

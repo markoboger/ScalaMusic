@@ -1,10 +1,11 @@
 package de.htwg.scalamusic.music
+import de.htwg.scalamusic.music.Context
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
 trait Music:
-    def play(instrument: Instrument, volume: Int = Context.volume): Unit
+    def play(instrument: Instrument = Piano, volume: Int = Context.volume): Unit
     def *(repetitions: Int): Music
     def *(pattern: Pattern): Music
     def toTickList: List[Option[Music]]
@@ -17,7 +18,7 @@ trait MusicSeq(musicSeq: Seq[Music] = Seq.empty) extends Music with Iterable[Mus
     private val generator = scala.util.Random
     var repeat = 1
     var pattern = Pattern(1)
-    def play(instrument: Instrument = Piano, volume: Int) = for (i <- 1 to repeat; part <- pattern) {
+    def play(instrument: Instrument = Piano, volume: Int = Context.volume) = for (i <- 1 to repeat; part <- pattern) {
         musicSeq.foreach(_.play(instrument, volume = volume * part))
     }
     def *(_pattern: Pattern): MusicSeq = { pattern = _pattern; this }
@@ -32,15 +33,15 @@ case class Pattern(pattern: Int*) extends Iterable[Int]:
 
 case class Tune(val musicSeq: Music*) extends MusicSeq:
     override def toString: String =
-        musicSeq.toString.replace("WrappedArray(", "(").replace(")", ")")
+        musicSeq.toString.replace("ArraySeq(", "(").replace(")", ")")
 
 case class Line(val musicSeq: Music*) extends MusicSeq:
     override def toString: String =
-        musicSeq.toString.replace("WrappedArray(", "[").replace(")", "]")
+        musicSeq.toString.replace("ArraySeq(", "[").replace(")", "]")
 
 case class Track(val musicSeq: Music*) extends MusicSeq:
     override def toString: String =
-        musicSeq.toString.replace("WrappedArray(", "{").replace(")", "}")
+        musicSeq.toString.replace("ArraySeq(", "{").replace(")", "}")
 
 def play(musicSeq: Music*): Unit = musicSeq.map(music =>
     music match {
